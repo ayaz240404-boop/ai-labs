@@ -1,0 +1,28 @@
+name: CI smoke test
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - name: Who am I / where am I
+        run: |
+          echo "Runner is alive"
+          whoami
+          pwd
+          uname -a
+          date
+
+      - name: Check tools
+        run: |
+          git --version || true
+          docker --version || true
+          docker compose version || true
+
+      - name: List working directory
+        run: |
+          ls -la
