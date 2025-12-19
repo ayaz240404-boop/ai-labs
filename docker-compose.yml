@@ -4,7 +4,8 @@ services:
      context: .
      dockerfile: docker/php/Dockerfile
     volumes:
-     - ./app:/var/www/html
+      - ./app:/var/www/html
+      - ./docker/php/conf.d:/usr/local/etc/php/conf.d:ro
     restart: unless-stopped
   nginx:
     image: nginx:alpine
