@@ -13,7 +13,7 @@
     <div class="labs">
         <a href="/lab1/" class="lab-card">
             <span class="lab-number">1</span>
-            <span class="lab-title">Угадай животное<br>(Акинатор)</span>
+            <span class="lab-title">Угадай явления природы<br>(Акинатор)</span>
         </a>
 
         <a href="/lab2/" class="lab-card">
