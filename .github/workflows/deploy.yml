@@ -1,4 +1,4 @@
-name: CI smoke test
+name: Deploy
 
 on:
   push:
@@ -6,23 +6,25 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  test:
+  deploy:
     runs-on: self-hosted
     steps:
-      - name: Who am I / where am I
+      - name: Show environment
         run: |
-          echo "Runner is alive"
+          set -e
           whoami
           pwd
-          uname -a
-          date
+          docker --version
+          docker compose version
 
-      - name: Check tools
+      - name: Deploy from /opt/ai-labs
         run: |
-          git --version || true
-          docker --version || true
-          docker compose version || true
+          set -e
+          cd /opt/ai-labs
 
-      - name: List working directory
-        run: |
-          ls -la
+          git fetch --prune
+          git reset --hard origin/main
+          git clean -fd
+
+          docker compose up -d --build
+          docker compose ps
