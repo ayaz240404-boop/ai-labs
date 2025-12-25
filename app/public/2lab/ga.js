@@ -13,7 +13,10 @@
   const genEl = document.getElementById("gen");
   const seedEl = document.getElementById("seed");
 
-  const chartFxCanvas = document.getElementById("chartFx");
+  // два canvas вместо одного
+  const chartFxMaxCanvas = document.getElementById("chartFxMax");
+  const chartFxMinCanvas = document.getElementById("chartFxMin");
+
   const chartBestCanvas = document.getElementById("chartBest");
 
   function num(el) {
@@ -34,59 +37,57 @@
     return Math.max(lo, Math.min(hi, x));
   }
 
-  let chartFx = null;
+  let chartFxMax = null;
+  let chartFxMin = null;
   let chartBest = null;
 
+  function makeFxChart(canvas, title) {
+    return new Chart(canvas, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "f(x)",
+            showLine: true,
+            data: [],
+            pointRadius: 0,
+            borderWidth: 2,
+          },
+          {
+            label: "точка",
+            data: [],
+            showLine: false,
+            pointRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        parsing: false, // {x,y}
+        plugins: {
+          legend: { display: true },
+          title: { display: true, text: title },
+          tooltip: { mode: "nearest", intersect: false },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            min: -10,
+            max: 53,
+            title: { display: true, text: "x" },
+          },
+          y: {
+            title: { display: true, text: "f(x)" },
+          },
+        },
+      },
+    });
+  }
+
   function ensureCharts() {
-    // --- f(x) + точки max/min ---
-    if (!chartFx) {
-      chartFx = new Chart(chartFxCanvas, {
-        type: "scatter",
-        data: {
-          datasets: [
-            {
-              label: "f(x)",
-              showLine: true,
-              data: [],
-              pointRadius: 0,
-              borderWidth: 2,
-            },
-            {
-              label: "MAX точка",
-              data: [],
-              showLine: false,
-              pointRadius: 6,
-            },
-            {
-              label: "MIN точка",
-              data: [],
-              showLine: false,
-              pointRadius: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          animation: false,
-          parsing: false, // {x,y}
-          scales: {
-            x: {
-              type: "linear",
-              min: -10,
-              max: 53,
-              title: { display: true, text: "x" },
-            },
-            y: {
-              title: { display: true, text: "f(x)" },
-            },
-          },
-          plugins: {
-            legend: { display: true },
-            tooltip: { mode: "nearest", intersect: false },
-          },
-        },
-      });
-    }
+    if (!chartFxMax) chartFxMax = makeFxChart(chartFxMaxCanvas, "Окно максимума");
+    if (!chartFxMin) chartFxMin = makeFxChart(chartFxMinCanvas, "Окно минимума");
 
     // --- история (две оси Y, иначе всё “плоское”) ---
     if (!chartBest) {
@@ -166,37 +167,47 @@
     const X_MIN = -10;
     const X_MAX = 53;
 
-    // line: 400 точек
-    const n = 400;
+    // линия f(x)
+    const n = 500;
     const line = [];
     for (let i = 0; i < n; i++) {
       const x = X_MIN + (i * (X_MAX - X_MIN)) / (n - 1);
       line.push({ x, y: fx(a, b, c, d, x) });
     }
 
+    // найденные точки
     const maxX = clamp(Number(data?.max?.x), X_MIN, X_MAX);
     const minX = clamp(Number(data?.min?.x), X_MIN, X_MAX);
-
     const maxY = fx(a, b, c, d, maxX);
     const minY = fx(a, b, c, d, minX);
 
-    chartFx.data.datasets[0].data = line;
-    chartFx.data.datasets[1].data = [{ x: maxX, y: maxY }];
-    chartFx.data.datasets[2].data = [{ x: minX, y: minY }];
-
-    // фикс X
-    chartFx.options.scales.x.min = X_MIN;
-    chartFx.options.scales.x.max = X_MAX;
-
-    // авто-Y с небольшим “паддингом”
+    // общий размах по Y для расчёта окна
     const ys = line.map((p) => p.y);
-    const yMin = Math.min(...ys);
-    const yMax = Math.max(...ys);
-    const pad = (yMax - yMin) * 0.08 || 1;
-    chartFx.options.scales.y.min = yMin - pad;
-    chartFx.options.scales.y.max = yMax + pad;
+    const yMinAll = Math.min(...ys);
+    const yMaxAll = Math.max(...ys);
+    const spread = yMaxAll - yMinAll;
 
-    chartFx.update();
+    // окно — 20% от размаха (и минимум, чтобы не было слишком узко)
+    const winMax = Math.max(spread * 0.2, 50);
+    const winMin = Math.max(spread * 0.2, 200);
+
+    // --- окно MAX ---
+    chartFxMax.data.datasets[0].data = line;
+    chartFxMax.data.datasets[1].data = [{ x: maxX, y: maxY }];
+    chartFxMax.options.scales.x.min = X_MIN;
+    chartFxMax.options.scales.x.max = X_MAX;
+    chartFxMax.options.scales.y.min = maxY - winMax;
+    chartFxMax.options.scales.y.max = maxY + winMax;
+    chartFxMax.update();
+
+    // --- окно MIN ---
+    chartFxMin.data.datasets[0].data = line;
+    chartFxMin.data.datasets[1].data = [{ x: minX, y: minY }];
+    chartFxMin.options.scales.x.min = X_MIN;
+    chartFxMin.options.scales.x.max = X_MAX;
+    chartFxMin.options.scales.y.min = minY - winMin;
+    chartFxMin.options.scales.y.max = minY + winMin;
+    chartFxMin.update();
   }
 
   function drawHistory(data) {
@@ -242,7 +253,7 @@
 
       const data = await res.json();
 
-      setStatus("Готово ✅");
+      setStatus("Готово");
       showResults(data);
       drawHistory(data);
       drawFunctionAndPoints(payload, data);
