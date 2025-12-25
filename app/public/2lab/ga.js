@@ -13,11 +13,12 @@
   const genEl = document.getElementById("gen");
   const seedEl = document.getElementById("seed");
 
-  // два canvas вместо одного
   const chartFxMaxCanvas = document.getElementById("chartFxMax");
   const chartFxMinCanvas = document.getElementById("chartFxMin");
-
   const chartBestCanvas = document.getElementById("chartBest");
+
+  const X_MIN = -10;
+  const X_MAX = 53;
 
   function num(el) {
     return Number(el.value);
@@ -25,7 +26,7 @@
 
   function fmt(x, digits = 6) {
     if (!Number.isFinite(x)) return "—";
-    const v = Number(x.toFixed(digits)); // убирает -0.000000
+    const v = Number(x.toFixed(digits));
     return String(v);
   }
 
@@ -64,22 +65,15 @@
       options: {
         responsive: true,
         animation: false,
-        parsing: false, // {x,y}
+        parsing: false,
         plugins: {
           legend: { display: true },
           title: { display: true, text: title },
           tooltip: { mode: "nearest", intersect: false },
         },
         scales: {
-          x: {
-            type: "linear",
-            min: -10,
-            max: 53,
-            title: { display: true, text: "x" },
-          },
-          y: {
-            title: { display: true, text: "f(x)" },
-          },
+          x: { type: "linear", title: { display: true, text: "x" } },
+          y: { title: { display: true, text: "f(x)" } },
         },
       },
     });
@@ -89,27 +83,14 @@
     if (!chartFxMax) chartFxMax = makeFxChart(chartFxMaxCanvas, "Окно максимума");
     if (!chartFxMin) chartFxMin = makeFxChart(chartFxMinCanvas, "Окно минимума");
 
-    // --- история (две оси Y, иначе всё “плоское”) ---
     if (!chartBest) {
       chartBest = new Chart(chartBestCanvas, {
         type: "line",
         data: {
           labels: [],
           datasets: [
-            {
-              label: "Best MAX f(x)",
-              data: [],
-              pointRadius: 0,
-              borderWidth: 2,
-              yAxisID: "yMax",
-            },
-            {
-              label: "Best MIN f(x)",
-              data: [],
-              pointRadius: 0,
-              borderWidth: 2,
-              yAxisID: "yMin",
-            },
+            { label: "Best MAX f(x)", data: [], pointRadius: 0, borderWidth: 2, yAxisID: "yMax" },
+            { label: "Best MIN f(x)", data: [], pointRadius: 0, borderWidth: 2, yAxisID: "yMin" },
           ],
         },
         options: {
@@ -122,17 +103,8 @@
           interaction: { mode: "index", intersect: false },
           scales: {
             x: { title: { display: true, text: "Поколение" } },
-            yMax: {
-              type: "linear",
-              position: "left",
-              title: { display: true, text: "MAX f(x)" },
-            },
-            yMin: {
-              type: "linear",
-              position: "right",
-              title: { display: true, text: "MIN f(x)" },
-              grid: { drawOnChartArea: false },
-            },
+            yMax: { type: "linear", position: "left", title: { display: true, text: "MAX f(x)" } },
+            yMin: { type: "linear", position: "right", title: { display: true, text: "MIN f(x)" }, grid: { drawOnChartArea: false } },
           },
         },
       });
@@ -158,56 +130,68 @@
     minOut.textContent = `x = ${fmt(minX)}; f(x) = ${fmt(minFx)}`;
   }
 
-  function drawFunctionAndPoints(payload, data) {
-    const a = payload.a,
-      b = payload.b,
-      c = payload.c,
-      d = payload.d;
-
-    const X_MIN = -10;
-    const X_MAX = 53;
-
-    // линия f(x)
-    const n = 500;
+  // строим кусок функции на [x0-w ; x0+w]
+  function buildWindowLine(a, b, c, d, xLeft, xRight, points = 250) {
     const line = [];
-    for (let i = 0; i < n; i++) {
-      const x = X_MIN + (i * (X_MAX - X_MIN)) / (n - 1);
+    for (let i = 0; i < points; i++) {
+      const x = xLeft + (i * (xRight - xLeft)) / (points - 1);
       line.push({ x, y: fx(a, b, c, d, x) });
     }
+    return line;
+  }
 
-    // найденные точки
+  function setAxisNice(chart, line) {
+    const ys = line.map((p) => p.y);
+    const yMin = Math.min(...ys);
+    const yMax = Math.max(...ys);
+    const pad = (yMax - yMin) * 0.12 || 1;
+    chart.options.scales.y.min = yMin - pad;
+    chart.options.scales.y.max = yMax + pad;
+  }
+
+  function drawFunctionAndPoints(payload, data) {
+    const a = payload.a, b = payload.b, c = payload.c, d = payload.d;
+
     const maxX = clamp(Number(data?.max?.x), X_MIN, X_MAX);
     const minX = clamp(Number(data?.min?.x), X_MIN, X_MAX);
+
     const maxY = fx(a, b, c, d, maxX);
     const minY = fx(a, b, c, d, minX);
 
-    // общий размах по Y для расчёта окна
-    const ys = line.map((p) => p.y);
-    const yMinAll = Math.min(...ys);
-    const yMaxAll = Math.max(...ys);
-    const spread = yMaxAll - yMinAll;
+    // ширина окна по X (можешь менять)
+    const W = 8;
 
-    // окно — 20% от размаха (и минимум, чтобы не было слишком узко)
-    const winMax = Math.max(spread * 0.2, 50);
-    const winMin = Math.max(spread * 0.2, 200);
+    // -------- окно MAX: показываем ТОЛЬКО окрестность maxX ----------
+    {
+      const left = clamp(maxX - W, X_MIN, X_MAX);
+      const right = clamp(maxX + W, X_MIN, X_MAX);
+      const line = buildWindowLine(a, b, c, d, left, right, 250);
 
-    // --- окно MAX ---
-    chartFxMax.data.datasets[0].data = line;
-    chartFxMax.data.datasets[1].data = [{ x: maxX, y: maxY }];
-    chartFxMax.options.scales.x.min = X_MIN;
-    chartFxMax.options.scales.x.max = X_MAX;
-    chartFxMax.options.scales.y.min = maxY - winMax;
-    chartFxMax.options.scales.y.max = maxY + winMax;
-    chartFxMax.update();
+      chartFxMax.data.datasets[0].data = line;
+      chartFxMax.data.datasets[1].data = [{ x: maxX, y: maxY }];
 
-    // --- окно MIN ---
-    chartFxMin.data.datasets[0].data = line;
-    chartFxMin.data.datasets[1].data = [{ x: minX, y: minY }];
-    chartFxMin.options.scales.x.min = X_MIN;
-    chartFxMin.options.scales.x.max = X_MAX;
-    chartFxMin.options.scales.y.min = minY - winMin;
-    chartFxMin.options.scales.y.max = minY + winMin;
-    chartFxMin.update();
+      chartFxMax.options.scales.x.min = left;
+      chartFxMax.options.scales.x.max = right;
+      setAxisNice(chartFxMax, line);
+
+      chartFxMax.update();
+    }
+
+    // -------- окно MIN: показываем ТОЛЬКО окрестность minX ----------
+    {
+      const left = clamp(minX - W, X_MIN, X_MAX);
+      const right = clamp(minX + W, X_MIN, X_MAX);
+      const line = buildWindowLine(a, b, c, d, left, right, 250);
+
+      chartFxMin.data.datasets[0].data = line;
+      chartFxMin.data.datasets[1].data = [{ x: minX, y: minY }];
+
+      chartFxMin.options.scales.x.min = left;
+      chartFxMin.options.scales.x.max = right;
+      setAxisNice(chartFxMin, line);
+
+      chartFxMin.update();
+    }
   }
 
   function drawHistory(data) {
@@ -228,8 +212,8 @@
       b: num(bEl),
       c: num(cEl),
       d: num(dEl),
-      x_min: -10,
-      x_max: 53,
+      x_min: X_MIN,
+      x_max: X_MAX,
       pop_size: num(popEl),
       generations: num(genEl),
       seed: num(seedEl),
