@@ -17,6 +17,33 @@
   const treeClose = document.getElementById("treeClose");
   const treeRefresh = document.getElementById("treeRefresh");
 
+  // aki UI
+  const akiImg = document.getElementById("akiImg"); // <img id="akiImg" ...>
+
+  const AKI = {
+    calm: "./photos/akinator/akinator_dumaet.png",
+    angry: "./photos/akinator/akinator_zlitsya.png",
+    happy: "./photos/akinator/akinator_raduetsya.png",
+  };
+
+  function setAkiMood(mood) {
+    if (!akiImg) return;
+
+    const src = AKI[mood] || AKI.calm;
+    if (akiImg.getAttribute("src") !== src) {
+      akiImg.setAttribute("src", src);
+    }
+
+    // CSS-классы: .aki-calm / .aki-angry / .aki-happy + .aki-pop
+    akiImg.classList.remove("aki-calm", "aki-angry", "aki-happy");
+    akiImg.classList.add(`aki-${mood}`);
+
+    // одноразовый “pop” при смене эмоции
+    akiImg.classList.remove("aki-pop");
+    void akiImg.offsetWidth; // force reflow
+    akiImg.classList.add("aki-pop");
+  }
+
   const STORAGE_KEY = "KnowledgeBaseNature";
 
   let base = [];
@@ -26,6 +53,9 @@
   let mode = "idle";
   let oldAnswerText = "";
   let trace = []; // { qText, answer }
+
+  // серия “Нет” подряд (для злости)
+  let noStreak = 0;
 
   // ---------------- UI helpers ----------------
   function addMsg(text, who = "bot") {
@@ -127,7 +157,10 @@
     trace = [];
     currentIndex = 0;
     oldAnswerText = "";
+    noStreak = 0;
     mode = "idle";
+
+    setAkiMood("calm");
 
     addMsg("Привет! Я игра «Акинатор: явления природы».");
     addMsg("Нажмите «Начать игру», загадайте явление и отвечайте кнопками «Да/Нет».");
@@ -136,14 +169,17 @@
 
   function startGame() {
     if (!base.length) return;
+
     showLearn(false);
-    // дерево можно оставить открытым, но чаще удобнее закрыть:
     showTree(false);
 
     trace = [];
     currentIndex = 0;
     oldAnswerText = "";
+    noStreak = 0;
     mode = "play";
+
+    setAkiMood("calm");
 
     addMsg("Ок, начинаем! Загадайте явление природы.");
     enableButtons(true);
@@ -155,6 +191,15 @@
     if (mode !== "play") return;
 
     addMsg(answerYes ? "Да" : "Нет", "user");
+
+    // эмоции от серии "нет"
+    if (answerYes) {
+      noStreak = 0;
+      setAkiMood("calm");
+    } else {
+      noStreak += 1;
+      setAkiMood(noStreak >= 2 ? "angry" : "calm");
+    }
 
     const node = base[currentIndex];
     if (!node) {
@@ -179,6 +224,7 @@
     if (isAnswer(node)) {
       if (answerYes) {
         addMsg(`Ура! Я угадал: ${node.text} 😎`);
+        setAkiMood("happy");
         mode = "done";
         enableButtons(false);
         return;
@@ -189,6 +235,10 @@
       mode = "learn";
       enableButtons(false);
       showLearn(true);
+
+      // нет отдельной "sad" картинки — пусть будет angry или calm
+      setAkiMood("angry");
+
       addMsg("Сдаюсь 😅 Заполните блок «Обучение» ниже, и я запомню новое явление.");
       return;
     }
@@ -267,6 +317,10 @@
     addMsg("Готово! Я запомнил новое правило ✅");
     showLearn(false);
 
+    // после обучения вернём спокойного
+    noStreak = 0;
+    setAkiMood("calm");
+
     // если дерево открыто — обновим, чтобы сразу увидеть изменения
     if (treeBox && !treeBox.hidden) renderTree();
 
@@ -341,13 +395,15 @@
     }
   }
 
-  // ---------------- init ----------------
   async function init() {
     base = await loadBase();
     if (!Array.isArray(base) || !base.length) {
       base = [{ id: 0, kind: "a", text: "Дождь" }];
     }
     normalizeIds();
+
+    // стартовое состояние аватара
+    setAkiMood("calm");
 
     quickBtns.forEach((btn) => {
       btn.addEventListener("click", () => handleCommand(btn.dataset.q));
@@ -357,6 +413,8 @@
     learnCancel.addEventListener("click", () => {
       addMsg("Обучение отменено.");
       showLearn(false);
+      noStreak = 0;
+      setAkiMood("calm");
       showWelcome();
     });
 

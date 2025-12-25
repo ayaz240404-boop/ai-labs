@@ -207,3 +207,61 @@ code{background:rgba(0,0,0,.25);
   background:rgba(0,0,0,.20);
   border:1px solid rgba(255,255,255,.10);
 }
+.aki{
+  display:flex;
+  justify-content:center;
+  padding:12px 18px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.08);
+}
+
+.aki img{
+  width:140px;
+  height:140px;
+  object-fit:contain;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+  transform-origin: 50% 70%;
+}
+
+/* Базовая “живая” анимация */
+.aki-calm{
+  animation: akiFloat 2.4s ease-in-out infinite;
+}
+
+/* Злость: лёгкая тряска */
+.aki-angry{
+  animation: akiShake .45s linear infinite;
+}
+
+/* Радость: подпрыгивание */
+.aki-happy{
+  animation: akiBounce .8s ease-in-out infinite;
+}
+
+/* Одноразовый “поп” при смене эмоции */
+.aki-pop{
+  animation: akiPop .22s ease-out 1;
+}
+
+@keyframes akiFloat{
+  0%,100%{ transform: translateY(0) scale(1); }
+  50%{ transform: translateY(-6px) scale(1.01); }
+}
+
+@keyframes akiShake{
+  0%{ transform: translateX(0) rotate(0); }
+  25%{ transform: translateX(-2px) rotate(-1deg); }
+  50%{ transform: translateX(2px) rotate(1deg); }
+  75%{ transform: translateX(-2px) rotate(-1deg); }
+  100%{ transform: translateX(0) rotate(0); }
+}
+
+@keyframes akiBounce{
+  0%,100%{ transform: translateY(0) scale(1); }
+  50%{ transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes akiPop{
+  0%{ transform: scale(.96); }
+  100%{ transform: scale(1); }
+}
