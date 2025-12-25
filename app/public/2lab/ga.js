@@ -38,57 +38,79 @@
   let chartBest = null;
 
   function ensureCharts() {
-    if (!chartFx) {
-      chartFx = new Chart(chartFxCanvas, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [
-            { label: "f(x)", data: [] },
-            { label: "MAX точка", data: [], showLine: false, pointRadius: 5 },
-            { label: "MIN точка", data: [], showLine: false, pointRadius: 5 },
-          ],
-        },
-        options: {
-          responsive: true,
-          animation: false,
-          scales: {
-            x: { title: { display: true, text: "x" } },
-            y: { title: { display: true, text: "f(x)" } },
+  if (!chartFx) {
+    chartFx = new Chart(chartFxCanvas, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "f(x)",
+            // line через scatter: showLine=true
+            showLine: true,
+            data: [],
+            pointRadius: 0,
+            borderWidth: 2
           },
-          plugins: {
-            legend: { display: true },
+          {
+            label: "MAX точка",
+            data: [],
+            showLine: false,
+            pointRadius: 5
           },
-        },
-      });
-    }
-
-    if (!chartBest) {
-      chartBest = new Chart(chartBestCanvas, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [
-            { label: "Best MAX f(x)", data: [] },
-            { label: "Best MIN f(x)", data: [] },
-          ],
-        },
-        options: {
-          responsive: true,
-          animation: false,
-          scales: {
-            x: { title: { display: true, text: "Поколение" } },
-            y: { title: { display: true, text: "f(x)" } },
+          {
+            label: "MIN точка",
+            data: [],
+            showLine: false,
+            pointRadius: 5
+          }
+        ],
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        parsing: false, // мы даём {x,y}
+        scales: {
+          x: {
+            type: "linear",
+            min: -10,
+            max: 53,
+            title: { display: true, text: "x" }
           },
-          plugins: {
-            legend: { display: true },
-            tooltip: { mode: "index", intersect: false },
-          },
-          interaction: { mode: "index", intersect: false },
+          y: {
+            title: { display: true, text: "f(x)" }
+          }
         },
-      });
-    }
+        plugins: {
+          legend: { display: true },
+          tooltip: { mode: "nearest", intersect: false }
+        }
+      }
+    });
   }
+
+  if (!chartBest) {
+    chartBest = new Chart(chartBestCanvas, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Best MAX f(x)", data: [], pointRadius: 0, borderWidth: 2 },
+          { label: "Best MIN f(x)", data: [], pointRadius: 0, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: { legend: { display: true } },
+        scales: {
+          x: { title: { display: true, text: "Поколение" } },
+          y: { title: { display: true, text: "f(x)" } },
+        },
+      },
+    });
+  }
+}
+
 
   function setBusy(busy) {
     btn.disabled = busy;
@@ -110,37 +132,37 @@
   }
 
   function drawFunctionAndPoints(payload, data) {
-    const a = payload.a, b = payload.b, c = payload.c, d = payload.d;
+  const a = payload.a, b = payload.b, c = payload.c, d = payload.d;
 
-    const X_MIN = -10;
-    const X_MAX = 53;
+  const X_MIN = -10;
+  const X_MAX = 53;
 
-    const n = 300;
-    const xs = [];
-    const ys = [];
-
-    for (let i = 0; i < n; i++) {
-      const x = X_MIN + (i * (X_MAX - X_MIN)) / (n - 1);
-      xs.push(x);
-      ys.push(fx(a, b, c, d, x));
-    }
-
-    const maxX = clamp(Number(data?.max?.x), X_MIN, X_MAX);
-    const minX = clamp(Number(data?.min?.x), X_MIN, X_MAX);
-
-    const maxY = fx(a, b, c, d, maxX);
-    const minY = fx(a, b, c, d, minX);
-
-    chartFx.data.labels = xs.map(v => Number(v.toFixed(3)));
-    chartFx.data.datasets[0].data = ys;
-
-    chartFx.data.datasets[1].data = [{ x: Number(maxX.toFixed(3)), y: maxY }];
-    chartFx.data.datasets[2].data = [{ x: Number(minX.toFixed(3)), y: minY }];
-
-    chartFx.options.parsing = false;
-    chartFx.options.scales.x.type = "linear";
-    chartFx.update();
+  // Рисуем функцию как {x,y}
+  const n = 400;
+  const line = [];
+  for (let i = 0; i < n; i++) {
+    const x = X_MIN + (i * (X_MAX - X_MIN)) / (n - 1);
+    line.push({ x, y: fx(a, b, c, d, x) });
   }
+
+  // Точки min/max от бэка (у него float)
+  const maxX = clamp(Number(data?.max?.x), X_MIN, X_MAX);
+  const minX = clamp(Number(data?.min?.x), X_MIN, X_MAX);
+
+  const maxY = fx(a, b, c, d, maxX);
+  const minY = fx(a, b, c, d, minX);
+
+  chartFx.data.datasets[0].data = line;
+  chartFx.data.datasets[1].data = [{ x: maxX, y: maxY }];
+  chartFx.data.datasets[2].data = [{ x: minX, y: minY }];
+
+  // Фиксируем границы оси X, чтобы не “уезжало”
+  chartFx.options.scales.x.min = X_MIN;
+  chartFx.options.scales.x.max = X_MAX;
+
+  chartFx.update();
+}
+
 
   function drawHistory(data) {
     const hMax = data?.max?.history?.best_fx ?? [];
