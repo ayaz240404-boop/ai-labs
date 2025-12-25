@@ -2,7 +2,6 @@
   const chat = document.getElementById("chat");
   const quickBtns = Array.from(document.querySelectorAll(".qbtn"));
 
-  // learn UI
   const learnBox = document.getElementById("learn");
   const learnAnswer = document.getElementById("learnAnswer");
   const learnQuestion = document.getElementById("learnQuestion");
@@ -251,7 +250,6 @@
     startGame();
   }
 
-  // ---------------- learning ----------------
   function applyLearning() {
     if (mode !== "learn") return;
 
