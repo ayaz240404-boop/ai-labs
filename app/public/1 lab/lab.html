@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Лаба 1 — Угадай явление природы</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="wrap">
@@ -16,27 +16,28 @@
         </div>
       </div>
       <nav class="nav">
-        <a href="/">На главную</a>
+        <a href="./">На главную</a>
       </nav>
     </header>
 
     <main class="chat" id="chat" aria-live="polite"></main>
 
     <footer class="bottom">
-      <form id="form" autocomplete="off">
-        <input id="msg" placeholder="Введите сообщение..." />
-        <button type="submit">Отправить</button>
-      </form>
-
       <div class="quick">
+        <button class="qbtn" type="button" data-q="start">Начать игру</button>
+
         <button class="qbtn" type="button" data-q="Да">Да</button>
         <button class="qbtn" type="button" data-q="Нет">Нет</button>
+
         <button class="qbtn" type="button" data-q="почему">почему</button>
-        <button class="qbtn" type="button" data-q="база">база</button>
         <button class="qbtn" type="button" data-q="сначала">сначала</button>
         <button class="qbtn" type="button" data-q="сброс">сброс</button>
+
+        <!-- если не хочешь показывать пользователю JSON — просто удали кнопку "база" -->
+        <button class="qbtn" type="button" data-q="база">база</button>
       </div>
 
+      <!-- Блок обучения (появляется, когда бот "сдался") -->
       <section class="learn" id="learn" hidden>
         <div class="learn-title">Обучение</div>
 
@@ -50,7 +51,7 @@
           <input id="learnQuestion" placeholder="Например: Это осадки в виде ледяных шариков?" />
         </label>
 
-        <div class="learn-row">
+        <div class="learn-row learn-radio">
           <label><input type="radio" name="correct" id="correctYes"> Для нового явления ответ: Да</label>
           <label><input type="radio" name="correct" id="correctNo"> Для нового явления ответ: Нет</label>
         </div>
@@ -63,6 +64,6 @@
     </footer>
   </div>
 
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

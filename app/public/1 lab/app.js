@@ -1,7 +1,5 @@
 (() => {
   const chat = document.getElementById("chat");
-  const form = document.getElementById("form");
-  const msgInput = document.getElementById("msg");
   const quickBtns = Array.from(document.querySelectorAll(".qbtn"));
 
   // learn UI
@@ -18,8 +16,8 @@
   let base = [];
   let currentIndex = 0;
 
-  // play | learn
-  let mode = "play";
+  // idle | play | learn | done
+  let mode = "idle";
   let oldAnswerText = "";
   let trace = []; // { qText, answer }
 
@@ -30,10 +28,6 @@
     div.textContent = text;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-  }
-
-  function setQuickEnabled(enabled) {
-    quickBtns.forEach(b => (b.disabled = !enabled));
   }
 
   function showLearn(show) {
@@ -47,6 +41,15 @@
     }
   }
 
+  function enableButtons(enabled) {
+    // отключаем все qbtn кроме start, когда нужно
+    quickBtns.forEach(btn => {
+      const cmd = btn.dataset.q;
+      if (cmd === "start") btn.disabled = false;      // start всегда доступна
+      else btn.disabled = !enabled;
+    });
+  }
+
   // ---------------- base helpers ----------------
   async function loadBase() {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -56,7 +59,8 @@
         if (Array.isArray(parsed) && parsed.length) return parsed;
       } catch {}
     }
-    const res = await fetch("/base.json", { cache: "no-store" });
+    // лучше относительный путь
+    const res = await fetch("base.json", { cache: "no-store" });
     return await res.json();
   }
 
@@ -77,25 +81,42 @@
 
   function askCurrent() {
     if (!validIndex(currentIndex)) {
-      addMsg("Ошибка базы: текущий индекс вне диапазона. Команда: «сброс».");
+      addMsg("Ошибка базы: текущий индекс вне диапазона. Нажмите «сброс».");
+      mode = "idle";
+      enableButtons(false);
       return;
     }
+
     const node = base[currentIndex];
     if (isQuestion(node)) addMsg(node.text);
     else if (isAnswer(node)) addMsg(`Это ${node.text}?`);
-    else addMsg("Ошибка базы: неизвестный тип узла. Команда: «сброс».");
+    else addMsg("Ошибка базы: неизвестный тип узла. Нажмите «сброс».");
   }
 
-  function startNewGame() {
+  // ---------------- game lifecycle ----------------
+  function showWelcome() {
     chat.innerHTML = "";
-    mode = "play";
-    currentIndex = 0;
-    trace = [];
-    oldAnswerText = "";
     showLearn(false);
-    setQuickEnabled(true);
+    trace = [];
+    currentIndex = 0;
+    oldAnswerText = "";
+    mode = "idle";
 
-    addMsg("Начнём новую игру. Загадайте явление природы и отвечайте «Да/Нет».");
+    addMsg("Привет! Я игра «Акинатор: явления природы».");
+    addMsg("Нажмите «Начать игру», загадайте явление и отвечайте кнопками «Да/Нет».");
+    enableButtons(false);
+  }
+
+  function startGame() {
+    if (!base.length) return;
+    showLearn(false);
+    trace = [];
+    currentIndex = 0;
+    oldAnswerText = "";
+    mode = "play";
+
+    addMsg("Ок, начинаем! Загадайте явление природы.");
+    enableButtons(true);
     askCurrent();
   }
 
@@ -107,18 +128,19 @@
 
     const node = base[currentIndex];
     if (!node) {
-      addMsg("Ошибка базы: узел не найден. Команда: «сброс».");
+      addMsg("Ошибка базы: узел не найден. Нажмите «сброс».");
       return;
     }
 
     if (isQuestion(node)) {
       trace.push({ qText: node.text, answer: answerYes ? "Да" : "Нет" });
-      const next = answerYes ? node.yes : node.no;
 
+      const next = answerYes ? node.yes : node.no;
       if (!validIndex(next)) {
-        addMsg("Ошибка базы: ветка ведёт в никуда. Команда: «сброс» или исправьте base.json.");
+        addMsg("Ошибка базы: ветка ведёт в никуда. Нажмите «сброс».");
         return;
       }
+
       currentIndex = next;
       askCurrent();
       return;
@@ -126,34 +148,25 @@
 
     if (isAnswer(node)) {
       if (answerYes) {
-        addMsg(`Ура! Я угадал: ${node.text} 😎`);
-        setQuickEnabled(false);
+        addMsg(`Ура! Я угадал: ${node.text}`);
+        mode = "done";
+        enableButtons(false);
         return;
       }
 
       // проигрыш -> обучение
       oldAnswerText = node.text;
       mode = "learn";
-      setQuickEnabled(false);
+      enableButtons(false);
       showLearn(true);
-
-      addMsg("Сдаюсь 😅 Заполните блок «Обучение» ниже, и я запомню новое явление.");
+      addMsg("Сдаюсь Заполните блок «Обучение» ниже, и я запомню новое явление.");
       return;
     }
-
-    addMsg("Ошибка базы: некорректный узел. Команда: «сброс».");
   }
 
   // ---------------- commands ----------------
-  async function resetToDefault() {
-    localStorage.removeItem(STORAGE_KEY);
-    base = await loadBase();
-    normalizeIds();
-    addMsg("База сброшена к исходной (base.json).");
-    startNewGame();
-  }
-
   function showWhy() {
+    if (mode !== "play") return;
     if (!trace.length) {
       addMsg("Пока нет цепочки вопросов (мы в самом начале).");
       return;
@@ -162,9 +175,18 @@
     trace.forEach(s => addMsg(`• ${s.qText} → ${s.answer}`));
   }
 
-  function showBase() {
-    addMsg("Текущая база (JSON):");
-    addMsg(JSON.stringify(base, null, 2));
+  async function resetToDefault() {
+    localStorage.removeItem(STORAGE_KEY);
+    base = await loadBase();
+    normalizeIds();
+    addMsg("База сброшена к исходной (base.json).");
+    showWelcome();
+  }
+
+  function restart() {
+    // “сначала” — новая игра с текущей базой
+    addMsg("Ок, начнём сначала.");
+    startGame();
   }
 
   // ---------------- learning ----------------
@@ -185,27 +207,23 @@
       return;
     }
 
-    // текущий узел — лист (ответ), на котором мы проиграли
     const oldLeafIndex = currentIndex;
     const oldLeaf = base[oldLeafIndex];
 
     if (!oldLeaf || !isAnswer(oldLeaf)) {
-      addMsg("Ошибка обучения: текущий узел не является ответом. Команда: «сначала».");
-      startNewGame();
+      addMsg("Ошибка обучения: текущий узел не является ответом. Нажмите «Начать игру».");
+      showWelcome();
       return;
     }
 
     const oldText = oldLeaf.text;
 
-    // 1) создаём новый лист (новое явление)
     const newLeafIndex = base.length;
     base.push({ id: newLeafIndex, kind: "a", text: newA });
 
-    // 2) создаём лист со старым ответом (потому что текущий индекс станет вопросом)
     const oldAnswerLeafIndex = base.length;
     base.push({ id: oldAnswerLeafIndex, kind: "a", text: oldText });
 
-    // 3) превращаем текущий лист в вопрос и ставим ветки
     base[oldLeafIndex] = {
       id: oldLeafIndex,
       kind: "q",
@@ -217,52 +235,53 @@
     normalizeIds();
     saveBase();
 
-    addMsg("Готово! Я запомнил новое правило (сохранено в вашем браузере).");
-    startNewGame();
+    addMsg("Готово! Я запомнил новое правило");
+    showLearn(false);
+    showWelcome(); // возвращаемся к экрану “Начать игру”
   }
 
-  // ---------------- input router ----------------
-  function handleText(raw) {
-    const text = (raw ?? "").trim();
-    if (!text) return;
-
-    const low = text.toLowerCase();
-
-    if (low === "да") return step(true);
-    if (low === "нет") return step(false);
-    if (low === "почему") return showWhy();
-    if (low === "база") return showBase();
-    if (low === "сначала") return startNewGame();
-    if (low === "сброс") return resetToDefault();
-
-    addMsg(text, "user");
-    addMsg("Я понимаю: Да/Нет/почему/база/сначала/сброс.");
+  // ---------------- buttons router ----------------
+  function handleCommand(cmd) {
+    switch (cmd) {
+      case "start":
+        return startGame();
+      case "Да":
+      case "да":
+        return step(true);
+      case "Нет":
+      case "нет":
+        return step(false);
+      case "почему":
+        return showWhy();
+      case "сначала":
+        return restart();
+      case "сброс":
+        return resetToDefault();
+      default:
+        return;
+    }
   }
 
   // ---------------- init ----------------
   async function init() {
     base = await loadBase();
-    if (!Array.isArray(base) || !base.length) base = [{ id: 0, kind: "a", text: "Дождь" }];
+    if (!Array.isArray(base) || !base.length) {
+      base = [{ id: 0, kind: "a", text: "Дождь" }];
+    }
     normalizeIds();
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const t = msgInput.value;
-      msgInput.value = "";
-      handleText(t);
-    });
-
     quickBtns.forEach(btn => {
-      btn.addEventListener("click", () => handleText(btn.dataset.q));
+      btn.addEventListener("click", () => handleCommand(btn.dataset.q));
     });
 
     learnSave.addEventListener("click", applyLearning);
     learnCancel.addEventListener("click", () => {
       addMsg("Обучение отменено.");
-      startNewGame();
+      showLearn(false);
+      showWelcome();
     });
 
-    startNewGame();
+    showWelcome();
   }
 
   init();
