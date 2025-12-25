@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Лаба 1 — Угадай явление природы</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="title">Лаба 1 — «Угадай явление природы»</div>
+        <div class="subtitle">
+          Отвечай «Да/Нет». Команды: <b>почему</b>, <b>база</b>, <b>сначала</b>, <b>сброс</b>.
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/">На главную</a>
+      </nav>
+    </header>
+
+    <main class="chat" id="chat" aria-live="polite"></main>
+
+    <footer class="bottom">
+      <form id="form" autocomplete="off">
+        <input id="msg" placeholder="Введите сообщение..." />
+        <button type="submit">Отправить</button>
+      </form>
+
+      <div class="quick">
+        <button class="qbtn" type="button" data-q="Да">Да</button>
+        <button class="qbtn" type="button" data-q="Нет">Нет</button>
+        <button class="qbtn" type="button" data-q="почему">почему</button>
+        <button class="qbtn" type="button" data-q="база">база</button>
+        <button class="qbtn" type="button" data-q="сначала">сначала</button>
+        <button class="qbtn" type="button" data-q="сброс">сброс</button>
+      </div>
+
+      <section class="learn" id="learn" hidden>
+        <div class="learn-title">Обучение</div>
+
+        <label class="learn-row">
+          <span>Какое явление вы загадали?</span>
+          <input id="learnAnswer" placeholder="Например: Град" />
+        </label>
+
+        <label class="learn-row">
+          <span>Уточняющий вопрос (да/нет):</span>
+          <input id="learnQuestion" placeholder="Например: Это осадки в виде ледяных шариков?" />
+        </label>
+
+        <div class="learn-row">
+          <label><input type="radio" name="correct" id="correctYes"> Для нового явления ответ: Да</label>
+          <label><input type="radio" name="correct" id="correctNo"> Для нового явления ответ: Нет</label>
+        </div>
+
+        <div class="learn-actions">
+          <button id="learnSave" type="button">Добавить в базу</button>
+          <button id="learnCancel" type="button">Отмена</button>
+        </div>
+      </section>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
