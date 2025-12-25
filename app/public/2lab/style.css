@@ -1,0 +1,93 @@
+.ga{
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px
+}
+    .ga-head{
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+        align-items:flex-start
+    }
+    .ga-title{
+        font-weight:800;
+        font-size:16px
+    }
+    .ga-subtitle{
+        opacity:.85;
+        font-size:12px;
+        margin-top:6px
+    }
+    .ga-run{
+        cursor:pointer;
+        border:none;
+        border-radius:12px;
+        padding:10px 14px;
+        background:#2b63ff;
+        color:#fff
+    }
+    .ga-run:disabled{
+        opacity:.6;
+        cursor:not-allowed
+    }
+    .ga-grid{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:12px
+    }
+    .ga-card{
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(0,0,0,.18);
+        border-radius:14px;
+        padding:14px
+    }
+    .ga-card-title{
+        font-weight:700;
+        margin-bottom:10px
+    }
+    .ga-form{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px
+    }
+    .ga-form label{
+        display:flex;
+        justify-content:space-between;
+        gap:10px;
+        align-items:center;
+        font-size:13px;
+        opacity:.95
+    }
+    .ga-form input{
+        width:120px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.18);
+        background:rgba(0,0,0,.2);
+        color:#e7eefc;
+        padding:8px 10px
+    }
+    .ga-hint{
+        opacity:.75;
+        font-size:12px;
+        margin-top:10px
+    }
+    .ga-status{
+        opacity:.9;
+        margin-bottom:10px
+    }
+    .ga-kv{
+        display:grid;
+        grid-template-columns:90px 1fr;
+        gap:8px 12px
+    }
+    .ga-k{
+        opacity:.85;
+        font-size:13px
+    }
+    .ga-v{
+        ont-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
+    }
+    @media (max-width: 900px){
+        .ga-grid{grid-template-columns:1fr}
+    }

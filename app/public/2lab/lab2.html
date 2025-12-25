@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Лаба 2 — Генетический алгоритм</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="title">Лаба 2 — «Генетический алгоритм»</div>
+        <div class="subtitle">
+          Поиск минимума и максимума функции <b>f(x)=a+bx+cx²+dx³</b> на интервале <b>x∈[-10; 53]</b>.
+          Нажми «Запустить ГА» — расчёт идёт на бэке (PHP → Python) и возвращается JSON.
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="../index.php">На главную</a>
+      </nav>
+    </header>
+
+    <main class="chat" id="content" aria-live="polite">
+      <section class="ga">
+        <div class="ga-head">
+          <div>
+            <div class="ga-title">Генетический алгоритм</div>
+            <div class="ga-subtitle">
+              Настрой коэффициенты и параметры ГА, затем запусти.
+            </div>
+          </div>
+          <button id="gaRun" type="button" class="ga-run">Запустить ГА</button>
+        </div>
+
+        <div class="ga-grid">
+          <div class="ga-card">
+            <div class="ga-card-title">Коэффициенты</div>
+            <div class="ga-form">
+              <label>a <input id="a" type="number" step="1" value="44"></label>
+              <label>b <input id="b" type="number" step="1" value="3"></label>
+              <label>c <input id="c" type="number" step="1" value="-63"></label>
+              <label>d <input id="d" type="number" step="1" value="1"></label>
+            </div>
+          </div>
+
+          <div class="ga-card">
+            <div class="ga-card-title">Параметры ГА</div>
+            <div class="ga-form">
+              <label>Популяция <input id="pop" type="number" min="10" max="500" step="1" value="80"></label>
+              <label>Поколения <input id="gen" type="number" min="1" max="2000" step="1" value="80"></label>
+              <label>Seed <input id="seed" type="number" step="1" value="1"></label>
+            </div>
+            <div class="ga-hint">Подсказка: seed делает результат воспроизводимым.</div>
+          </div>
+
+          <div class="ga-card">
+            <div class="ga-card-title">Результаты</div>
+            <div id="gaStatus" class="ga-status">Готово к запуску.</div>
+
+            <div class="ga-kv">
+              <div class="ga-k">Максимум</div>
+              <div class="ga-v" id="maxOut">—</div>
+
+              <div class="ga-k">Минимум</div>
+              <div class="ga-v" id="minOut">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ga-card">
+          <div class="ga-card-title">График функции и найденные точки</div>
+          <canvas id="chartFx" height="120"></canvas>
+        </div>
+
+        <div class="ga-card">
+          <div class="ga-card-title">Эволюция (лучшее значение по поколениям)</div>
+          <canvas id="chartBest" height="120"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <div class="quick">
+        <a class="qbtn" href="ga_run.php" target="_blank" rel="noreferrer">Открыть ga_run.php</a>
+        <button class="qbtn" id="ping" type="button">Проверить Python (/health)</button>
+      </div>
+    </footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="ga.js"></script>
+</body>
+</html>
