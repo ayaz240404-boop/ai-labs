@@ -21,7 +21,7 @@
             <span class="lab-title">Генетический алгоритм</span>
         </a>
 
-        <a href="/lab3/" class="lab-card">
+        <a href="/3lab/lab3.html" class="lab-card">
             <span class="lab-number">3</span>
             <span class="lab-title">Нейронная сеть</span>
         </a>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Лаба 3 — Распознавание букв (NN)</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="title">Лаба 3 — «Нейронная сеть: распознавание букв A–Z»</div>
+        <div class="subtitle">
+          Нарисуй <b>заглавную английскую букву</b> на холсте и нажми «Распознать».
+          Запрос идёт: <b>JS → PHP → Python(FastAPI) → модель</b>.
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="../index.php">На главную</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="ga">
+        <div class="ga-head">
+          <div>
+            <div class="ga-title">Распознавание буквы</div>
+            <div class="ga-subtitle">Рисуй мышкой/пальцем. Кисть чёрная, фон белый.</div>
+          </div>
+
+          <div class="btnrow">
+            <button id="btnClear" type="button" class="qbtn">Очистить</button>
+            <button id="btnPredict" type="button" class="ga-run">Распознать</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Холст</div>
+            <canvas id="draw" width="420" height="420"></canvas>
+            <div class="hint">
+              Подсказка: рисуй толще и по центру. Лучше одна буква за раз.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Результат</div>
+
+            <div id="status" class="status">Готово.</div>
+
+            <div class="result">
+              <div class="big" id="outLetter">—</div>
+              <div class="small" id="outProb">—</div>
+            </div>
+
+            <div class="card-title mt">Топ-5</div>
+            <div id="top5" class="top5">—</div>
+
+            <div class="hint mt">
+              Если распознаёт плохо — попробуй рисовать крупнее и без лишних штрихов.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <div class="quick">
+        <a class="qbtn" href="predict.php" target="_blank" rel="noreferrer">Открыть predict.php</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="lab3.js"></script>
+</body>
+</html>

@@ -5,10 +5,14 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY ./app/public/2lab/python/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r ./requirements.txt
+ARG APP_SUBDIR=app/public/2lab/python
+ARG UVICORN_PORT=8000
 
-COPY ./app/public/2lab/python/ ./  
+COPY ./${APP_SUBDIR}/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host=0.0.0.0", "--port=8000"]
+COPY ./${APP_SUBDIR}/ /app/
+
+EXPOSE ${UVICORN_PORT}
+
+CMD ["sh", "-c", "uvicorn main:app --host=0.0.0.0 --port=${UVICORN_PORT}"]
