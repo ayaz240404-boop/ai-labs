@@ -21,7 +21,7 @@
   const akiImg = document.getElementById("akiImg"); // <img id="akiImg" ...>
 
   const AKI = {
-    calm: "./photos/akinator/akinator_dumaet.png",
+    calm: "akinator_dumaet.png",
     angry: "./photos/akinator/akinator_zlitsya.png",
     happy: "./photos/akinator/akinator_raduetsya.png",
   };
