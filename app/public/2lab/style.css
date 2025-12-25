@@ -245,28 +245,3 @@ canvas{
   .ga-form{ grid-template-columns: 1fr; }
   .ga-form input{ width: 100%; }
 }
-.ga-split{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.ga-split-card{
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  border-radius:14px;
-  padding:12px;
-}
-.ga-split-title{
-  font-weight:700;
-  opacity:.9;
-  margin-bottom:8px;
-  font-size:13px;
-}
-.ga-note{
-  margin-top:10px;
-  font-size:12px;
-  opacity:.75;
-}
-@media (max-width: 980px){
-  .ga-split{grid-template-columns:1fr}
-}
