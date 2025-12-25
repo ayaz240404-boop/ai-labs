@@ -21,7 +21,7 @@
   const AKI = {
     calm: "/photos/akinator/akinator_dumaet.png",
     angry: "/photos/akinator/akinator_zlitsya.png",
-    happy: "/photos/akinator/akinator_raduetsya.png",
+    happy: "/photos/akinator/akinator_raduetsa.png",
   };
 
   function setAkiMood(mood) {
