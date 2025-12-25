@@ -26,4 +26,5 @@ services:
       dockerfile: docker/python/Dockerfile
     volumes:
       - "./app/public/2lab/python:/app"
+    user: "1000:1000"
     restart: unless-stopped
