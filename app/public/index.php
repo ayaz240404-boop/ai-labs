@@ -16,7 +16,7 @@
             <span class="lab-title">Угадай явления природы<br>(Акинатор)</span>
         </a>
 
-        <a href="/lab2/" class="lab-card">
+        <a href="/2lab/lab2.html" class="lab-card">
             <span class="lab-number">2</span>
             <span class="lab-title">Генетический алгоритм</span>
         </a>
