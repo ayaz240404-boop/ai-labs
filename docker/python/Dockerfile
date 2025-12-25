@@ -8,10 +8,10 @@ WORKDIR /app
 ARG APP_SUBDIR=app/public/2lab/python
 ARG UVICORN_PORT=8000
 
-COPY ./${APP_SUBDIR}/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY ./${APP_SUBDIR}/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r ./requirements.txt
 
-COPY ./${APP_SUBDIR}/ /app/
+COPY ./${APP_SUBDIR}/ ./
 
 EXPOSE ${UVICORN_PORT}
 
