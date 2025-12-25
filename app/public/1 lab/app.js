@@ -11,6 +11,12 @@
   const correctYes = document.getElementById("correctYes");
   const correctNo = document.getElementById("correctNo");
 
+  // tree UI
+  const treeBox = document.getElementById("tree");
+  const treeBody = document.getElementById("treeBody");
+  const treeClose = document.getElementById("treeClose");
+  const treeRefresh = document.getElementById("treeRefresh");
+
   const STORAGE_KEY = "KnowledgeBaseNature";
 
   let base = [];
@@ -41,11 +47,16 @@
     }
   }
 
+  function showTree(show) {
+    treeBox.hidden = !show;
+    if (show) renderTree();
+  }
+
   function enableButtons(enabled) {
     // отключаем все qbtn кроме start, когда нужно
-    quickBtns.forEach(btn => {
+    quickBtns.forEach((btn) => {
       const cmd = btn.dataset.q;
-      if (cmd === "start") btn.disabled = false;      // start всегда доступна
+      if (cmd === "start") btn.disabled = false; // start всегда доступна
       else btn.disabled = !enabled;
     });
   }
@@ -59,13 +70,24 @@
         if (Array.isArray(parsed) && parsed.length) return parsed;
       } catch {}
     }
-    // лучше относительный путь
-    const res = await fetch("base.json", { cache: "no-store" });
+    // относительный путь
+    const res = await fetch("./base.json", { cache: "no-store" });
     return await res.json();
   }
 
   function saveBase() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
+  }
+
+  function loadBaseFromStorageOrMemory() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch {}
+    }
+    return base; // текущая в памяти
   }
 
   function normalizeIds() {
@@ -76,8 +98,12 @@
     return Number.isInteger(i) && i >= 0 && i < base.length;
   }
 
-  function isQuestion(n) { return n?.kind === "q"; }
-  function isAnswer(n) { return n?.kind === "a"; }
+  function isQuestion(n) {
+    return n?.kind === "q";
+  }
+  function isAnswer(n) {
+    return n?.kind === "a";
+  }
 
   function askCurrent() {
     if (!validIndex(currentIndex)) {
@@ -97,6 +123,7 @@
   function showWelcome() {
     chat.innerHTML = "";
     showLearn(false);
+    showTree(false);
     trace = [];
     currentIndex = 0;
     oldAnswerText = "";
@@ -110,6 +137,9 @@
   function startGame() {
     if (!base.length) return;
     showLearn(false);
+    // дерево можно оставить открытым, но чаще удобнее закрыть:
+    showTree(false);
+
     trace = [];
     currentIndex = 0;
     oldAnswerText = "";
@@ -148,7 +178,7 @@
 
     if (isAnswer(node)) {
       if (answerYes) {
-        addMsg(`Ура! Я угадал: ${node.text}`);
+        addMsg(`Ура! Я угадал: ${node.text} 😎`);
         mode = "done";
         enableButtons(false);
         return;
@@ -159,7 +189,7 @@
       mode = "learn";
       enableButtons(false);
       showLearn(true);
-      addMsg("Сдаюсь Заполните блок «Обучение» ниже, и я запомню новое явление.");
+      addMsg("Сдаюсь 😅 Заполните блок «Обучение» ниже, и я запомню новое явление.");
       return;
     }
   }
@@ -172,7 +202,7 @@
       return;
     }
     addMsg("Почему я так думаю:");
-    trace.forEach(s => addMsg(`• ${s.qText} → ${s.answer}`));
+    trace.forEach((s) => addMsg(`• ${s.qText} → ${s.answer}`));
   }
 
   async function resetToDefault() {
@@ -184,7 +214,6 @@
   }
 
   function restart() {
-    // “сначала” — новая игра с текущей базой
     addMsg("Ок, начнём сначала.");
     startGame();
   }
@@ -229,15 +258,63 @@
       kind: "q",
       text: newQ,
       yes: correctIsYes ? newLeafIndex : oldAnswerLeafIndex,
-      no:  correctIsYes ? oldAnswerLeafIndex : newLeafIndex
+      no: correctIsYes ? oldAnswerLeafIndex : newLeafIndex,
     };
 
     normalizeIds();
     saveBase();
 
-    addMsg("Готово! Я запомнил новое правило");
+    addMsg("Готово! Я запомнил новое правило ✅");
     showLearn(false);
-    showWelcome(); // возвращаемся к экрану “Начать игру”
+
+    // если дерево открыто — обновим, чтобы сразу увидеть изменения
+    if (treeBox && !treeBox.hidden) renderTree();
+
+    showWelcome();
+  }
+
+  // ---------------- tree rendering ----------------
+  function renderTree() {
+    const b = loadBaseFromStorageOrMemory();
+    const seen = new Set();
+
+    function nodeToLines(idx, prefix = "", isLast = true) {
+      const lines = [];
+      const connector = prefix ? (isLast ? "└─ " : "├─ ") : "";
+      const node = b[idx];
+
+      if (!node) {
+        lines.push(`${prefix}${connector}[${idx}] <нет узла>`);
+        return lines;
+      }
+
+      const label =
+        node.kind === "q" ? `[${idx}] ? ${node.text}` : `[${idx}] ✓ ${node.text}`;
+
+      lines.push(`${prefix}${connector}${label}`);
+
+      if (node.kind !== "q") return lines;
+
+      if (seen.has(idx)) {
+        lines.push(`${prefix}${isLast ? "   " : "│  "}↳ (цикл)`);
+        return lines;
+      }
+      seen.add(idx);
+
+      const nextPrefix = prefix + (prefix ? (isLast ? "   " : "│  ") : "");
+      const yesIdx = node.yes;
+      const noIdx = node.no;
+
+      lines.push(`${nextPrefix}├─ (Да)`);
+      lines.push(...nodeToLines(yesIdx, nextPrefix + "│  ", false));
+
+      lines.push(`${nextPrefix}└─ (Нет)`);
+      lines.push(...nodeToLines(noIdx, nextPrefix + "   ", true));
+
+      return lines;
+    }
+
+    treeBody.textContent = nodeToLines(0).join("\n");
   }
 
   // ---------------- buttons router ----------------
@@ -257,6 +334,8 @@
         return restart();
       case "сброс":
         return resetToDefault();
+      case "tree":
+        return showTree(treeBox.hidden); // toggle
       default:
         return;
     }
@@ -270,7 +349,7 @@
     }
     normalizeIds();
 
-    quickBtns.forEach(btn => {
+    quickBtns.forEach((btn) => {
       btn.addEventListener("click", () => handleCommand(btn.dataset.q));
     });
 
@@ -280,6 +359,9 @@
       showLearn(false);
       showWelcome();
     });
+
+    treeClose.addEventListener("click", () => showTree(false));
+    treeRefresh.addEventListener("click", renderTree);
 
     showWelcome();
   }

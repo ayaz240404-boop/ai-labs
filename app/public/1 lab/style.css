@@ -159,3 +159,51 @@ code{background:rgba(0,0,0,.25);
 .learn-actions button:hover{
     background:rgba(255,255,255,.18)
 }
+.tree{
+  margin-top:12px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+  border-radius:14px;
+}
+
+.tree-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.tree-title{
+    font-weight:700;
+    opacity:.95
+}
+
+.tree-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap
+}
+
+.tree-actions button{
+  cursor:pointer;border:none;
+  border-radius:12px;
+  padding:8px 12px;
+  background:rgba(255,255,255,.12);
+  color:#e7eefc
+}
+.tree-actions button:hover{
+    background:rgba(255,255,255,.18)
+}
+
+.tree-body{
+  margin:0;
+  white-space:pre;
+  overflow:auto;
+  max-height:240px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.20);
+  border:1px solid rgba(255,255,255,.10);
+}
