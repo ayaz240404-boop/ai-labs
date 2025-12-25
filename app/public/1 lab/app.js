@@ -11,19 +11,17 @@
   const correctYes = document.getElementById("correctYes");
   const correctNo = document.getElementById("correctNo");
 
-  // tree UI
   const treeBox = document.getElementById("tree");
   const treeBody = document.getElementById("treeBody");
   const treeClose = document.getElementById("treeClose");
   const treeRefresh = document.getElementById("treeRefresh");
 
-  // aki UI
-  const akiImg = document.getElementById("akiImg"); // <img id="akiImg" ...>
+  const akiImg = document.getElementById("akiImg");
 
   const AKI = {
-    calm: "akinator_dumaet.png",
-    angry: "./photos/akinator/akinator_zlitsya.png",
-    happy: "./photos/akinator/akinator_raduetsya.png",
+    calm: "/photos/akinator/akinator_dumaet.png",
+    angry: "/photos/akinator/akinator_zlitsya.png",
+    happy: "/photos/akinator/akinator_raduetsya.png",
   };
 
   function setAkiMood(mood) {
@@ -34,13 +32,11 @@
       akiImg.setAttribute("src", src);
     }
 
-    // CSS-классы: .aki-calm / .aki-angry / .aki-happy + .aki-pop
     akiImg.classList.remove("aki-calm", "aki-angry", "aki-happy");
     akiImg.classList.add(`aki-${mood}`);
 
-    // одноразовый “pop” при смене эмоции
     akiImg.classList.remove("aki-pop");
-    void akiImg.offsetWidth; // force reflow
+    void akiImg.offsetWidth;
     akiImg.classList.add("aki-pop");
   }
 
@@ -49,15 +45,12 @@
   let base = [];
   let currentIndex = 0;
 
-  // idle | play | learn | done
   let mode = "idle";
   let oldAnswerText = "";
-  let trace = []; // { qText, answer }
+  let trace = [];
 
-  // серия “Нет” подряд (для злости)
   let noStreak = 0;
 
-  // ---------------- UI helpers ----------------
   function addMsg(text, who = "bot") {
     const div = document.createElement("div");
     div.className = `msg ${who === "user" ? "user" : "bot"}`;
@@ -83,15 +76,13 @@
   }
 
   function enableButtons(enabled) {
-    // отключаем все qbtn кроме start, когда нужно
     quickBtns.forEach((btn) => {
       const cmd = btn.dataset.q;
-      if (cmd === "start") btn.disabled = false; // start всегда доступна
+      if (cmd === "start") btn.disabled = false;
       else btn.disabled = !enabled;
     });
   }
 
-  // ---------------- base helpers ----------------
   async function loadBase() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -100,7 +91,6 @@
         if (Array.isArray(parsed) && parsed.length) return parsed;
       } catch {}
     }
-    // относительный путь
     const res = await fetch("./base.json", { cache: "no-store" });
     return await res.json();
   }
@@ -117,7 +107,7 @@
         if (Array.isArray(parsed) && parsed.length) return parsed;
       } catch {}
     }
-    return base; // текущая в памяти
+    return base;
   }
 
   function normalizeIds() {
@@ -149,7 +139,6 @@
     else addMsg("Ошибка базы: неизвестный тип узла. Нажмите «сброс».");
   }
 
-  // ---------------- game lifecycle ----------------
   function showWelcome() {
     chat.innerHTML = "";
     showLearn(false);
@@ -186,13 +175,11 @@
     askCurrent();
   }
 
-  // ---------------- gameplay ----------------
   function step(answerYes) {
     if (mode !== "play") return;
 
     addMsg(answerYes ? "Да" : "Нет", "user");
 
-    // эмоции от серии "нет"
     if (answerYes) {
       noStreak = 0;
       setAkiMood("calm");
@@ -223,28 +210,24 @@
 
     if (isAnswer(node)) {
       if (answerYes) {
-        addMsg(`Ура! Я угадал: ${node.text} 😎`);
+        addMsg(`Ура! Я угадал: ${node.text}`);
         setAkiMood("happy");
         mode = "done";
         enableButtons(false);
         return;
       }
 
-      // проигрыш -> обучение
       oldAnswerText = node.text;
       mode = "learn";
       enableButtons(false);
       showLearn(true);
-
-      // нет отдельной "sad" картинки — пусть будет angry или calm
       setAkiMood("angry");
 
-      addMsg("Сдаюсь 😅 Заполните блок «Обучение» ниже, и я запомню новое явление.");
+      addMsg("Сдаюсь Заполните блок «Обучение» ниже, и я запомню новое явление.");
       return;
     }
   }
 
-  // ---------------- commands ----------------
   function showWhy() {
     if (mode !== "play") return;
     if (!trace.length) {
@@ -314,20 +297,17 @@
     normalizeIds();
     saveBase();
 
-    addMsg("Готово! Я запомнил новое правило ✅");
+    addMsg("Готово! Я запомнил новое правило");
     showLearn(false);
 
-    // после обучения вернём спокойного
     noStreak = 0;
     setAkiMood("calm");
 
-    // если дерево открыто — обновим, чтобы сразу увидеть изменения
     if (treeBox && !treeBox.hidden) renderTree();
 
     showWelcome();
   }
 
-  // ---------------- tree rendering ----------------
   function renderTree() {
     const b = loadBaseFromStorageOrMemory();
     const seen = new Set();
@@ -371,7 +351,6 @@
     treeBody.textContent = nodeToLines(0).join("\n");
   }
 
-  // ---------------- buttons router ----------------
   function handleCommand(cmd) {
     switch (cmd) {
       case "start":
@@ -389,7 +368,7 @@
       case "сброс":
         return resetToDefault();
       case "tree":
-        return showTree(treeBox.hidden); // toggle
+        return showTree(treeBox.hidden); 
       default:
         return;
     }
@@ -402,7 +381,6 @@
     }
     normalizeIds();
 
-    // стартовое состояние аватара
     setAkiMood("calm");
 
     quickBtns.forEach((btn) => {
