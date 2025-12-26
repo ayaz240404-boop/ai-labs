@@ -18,7 +18,7 @@ function fillWhite() {
 fillWhite();
 
 // кисть
-ctx.lineWidth = 14;
+ctx.lineWidth = 11;
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#000";
