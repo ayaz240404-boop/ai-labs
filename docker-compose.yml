@@ -31,7 +31,8 @@ services:
       dockerfile: docker/python/Dockerfile
       args:
         APP_SUBDIR: app/public/2lab/python
-        UVICORN_PORT: "8000"
+    environment:
+      UVICORN_PORT: 8000
     volumes:
       - ./app/public/2lab/python:/app
     restart: unless-stopped
@@ -42,7 +43,8 @@ services:
       dockerfile: docker/python/Dockerfile
       args:
         APP_SUBDIR: app/public/3lab/python
-        UVICORN_PORT: "8001"
+    environment:
+      UVICORN_PORT: 8001
     volumes:
       - ./app/public/3lab/python:/app
     restart: unless-stopped
