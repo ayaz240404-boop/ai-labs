@@ -8,7 +8,6 @@ const outLetter = document.getElementById("outLetter");
 const outProb = document.getElementById("outProb");
 const top5El = document.getElementById("top5");
 
-// фон белый
 function fillWhite() {
   ctx.save();
   ctx.fillStyle = "#fff";
@@ -81,7 +80,7 @@ btnPredict.addEventListener("click", async () => {
   top5El.textContent = "…";
 
   try {
-    const dataUrl = canvas.toDataURL("image/png"); // data:image/png;base64,...
+    const dataUrl = canvas.toDataURL("image/png");
 
     const res = await fetch("predict.php", {
       method: "POST",

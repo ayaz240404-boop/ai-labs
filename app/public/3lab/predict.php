@@ -18,7 +18,6 @@ if (!is_array($data) || empty($data['image_base64']) || !is_string($data['image_
   exit;
 }
 
-// небольшая защита по размеру (dataURL)
 if (strlen($data['image_base64']) > 2_000_000) {
   http_response_code(413);
   echo json_encode(['error' => 'Image too large'], JSON_UNESCAPED_UNICODE);
@@ -32,7 +31,6 @@ if ($payload === false) {
   exit;
 }
 
-// docker-compose: сервис python3lab слушает 8001
 $url = 'http://python3lab:8001/predict';
 
 $ch = curl_init($url);
