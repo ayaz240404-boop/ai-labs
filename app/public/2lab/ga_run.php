@@ -26,10 +26,6 @@ if (!is_array($data)) {
   exit;
 }
 
-/**
- * Минимальная валидация входа
- * (можешь расширить/убрать — но так безопаснее)
- */
 $required = ['a','b','c','d'];
 foreach ($required as $key) {
   if (!array_key_exists($key, $data) || !is_numeric($data[$key])) {
@@ -39,7 +35,6 @@ foreach ($required as $key) {
   }
 }
 
-// Значения по умолчанию (если фронт не передал)
 $defaults = [
   'x_min' => -10,
   'x_max' => 53,
@@ -49,8 +44,7 @@ $defaults = [
 ];
 $payload = array_merge($defaults, $data);
 
-// URL python-сервиса внутри docker сети
-$pythonUrl = 'http://python:8000/run';
+$pythonUrl = 'http://python2lab:8000/run';
 
 $ch = curl_init($pythonUrl);
 curl_setopt_array($ch, [
@@ -73,7 +67,6 @@ if ($response === false) {
   exit;
 }
 
-// Если python вернул ошибку — прокидываем как есть, но с корректным кодом
 if ($httpCode < 200 || $httpCode >= 300) {
   http_response_code($httpCode ?: 502);
   echo $response;
