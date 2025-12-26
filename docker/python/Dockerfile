@@ -1,18 +1,20 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
 ARG APP_SUBDIR=app/public/2lab/python
 ARG UVICORN_PORT=8000
 
-COPY ./${APP_SUBDIR}/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r ./requirements.txt
+COPY ./${APP_SUBDIR}/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm -rf /root/.cache/pip
 
-COPY ./${APP_SUBDIR}/ ./
+COPY ./${APP_SUBDIR}/ /app/
 
 EXPOSE ${UVICORN_PORT}
-
 CMD ["sh", "-c", "uvicorn main:app --host=0.0.0.0 --port=${UVICORN_PORT}"]
