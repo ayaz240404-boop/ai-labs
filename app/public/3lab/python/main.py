@@ -81,9 +81,8 @@ def _preprocess(img: Image.Image) -> np.ndarray:
 
     arr = np.array(img28, dtype=np.float32)
 
-    arr = arr.T
-    arr = np.flip(arr, axis=1)
     arr = np.rot90(arr, k=3)
+    
     arr = arr / 255.0
     arr = arr.reshape(1, 28, 28)
     return arr
