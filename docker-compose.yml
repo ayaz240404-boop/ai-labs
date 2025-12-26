@@ -46,3 +46,4 @@ services:
     volumes:
       - ./app/public/3lab/python:/app
     restart: unless-stopped
+
