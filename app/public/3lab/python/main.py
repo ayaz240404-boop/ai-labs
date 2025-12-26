@@ -9,7 +9,8 @@ from typing import List
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
+
 from tensorflow.keras.models import load_model
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "letters_model.h5")
@@ -74,7 +75,7 @@ def _preprocess(img: Image.Image) -> np.ndarray:
     padded.paste(img, ((side - w) // 2, (side - h) // 2))
 
     img28 = padded.resize((28, 28), resample=Image.Resampling.BILINEAR)
-
+    img28 = img28.filter(ImageFilter.MinFilter(3))
     if INVERT_INPUT:
         img28 = ImageOps.invert(img28)
 
@@ -82,7 +83,7 @@ def _preprocess(img: Image.Image) -> np.ndarray:
 
     arr = arr.T
     arr = np.flip(arr, axis=1)
-
+    arr = np.rot90(arr, k=3)
     arr = arr / 255.0
     arr = arr.reshape(1, 28, 28)
     return arr
